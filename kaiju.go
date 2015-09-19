@@ -34,7 +34,7 @@ func HandleFunc(path string, handler func(http.ResponseWriter, *http.Request), m
 }
 
 func Start(config Config) error {
-	logger.Infof("Starting services...")
+	logger.Infof("Starting %d services...", len(services))
 	err := startServices()
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func Start(config Config) error {
 }
 
 func StartTLS(config Config, tlsConfig *tls.Config) error {
-	logger.Infof("Starting services...")
+	logger.Infof("Starting %d services...", len(services))
 	if err := startServices(); err != nil {
 		return err
 	}
@@ -73,6 +73,7 @@ func startServices() error {
 }
 
 func stopServices() {
+	logger.Infof("Stopping %d services...", len(services))
 	for _, service := range services {
 		service.Stop()
 	}
@@ -84,6 +85,8 @@ func registerControlCFunction() {
 	go func() {
 		for range c {
 			stopServices()
+			logger.Close()
+			os.Exit(1)
 		}
 	}()
 }
