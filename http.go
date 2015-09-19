@@ -9,7 +9,7 @@ import (
 func EmptyJsonResponse(w http.ResponseWriter, respCode int) {
 	w.WriteHeader(respCode)
 	w.Header().Add("Content-type", "application/json")
-	w.Write([]byte{"{ }"})
+	w.Write([]byte("{ }"))
 }
 
 type loggedHandler func(w http.ResponseWriter, req *http.Request)

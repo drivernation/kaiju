@@ -2,7 +2,6 @@ package kaiju
 import (
 	"github.com/gorilla/mux"
 	"net"
-	"sync"
 	"net/http"
 	"fmt"
 	"crypto/tls"
@@ -24,7 +23,7 @@ func Manage(ss ...Service) {
 	services = append(services, ss...)
 }
 
-func Handle(path string, handler func(w http.ResponseWriter, http.Request), methods ...string) {
+func Handle(path string, handler func(http.ResponseWriter, *http.Request), methods ...string) {
 	logger.Infof("Handling method(s) %s at %s", methods, path)
 	muxer.Handle(path, loggedHandler(handler)).Methods(methods...)
 }
@@ -78,7 +77,7 @@ func registerControlCFunction() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for _ := range c {
+		for range c {
 			stopServices()
 		}
 	}()
