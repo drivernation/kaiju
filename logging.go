@@ -1,10 +1,10 @@
 package kaiju
+
 import (
+	"errors"
 	"github.com/cihub/seelog"
 	"io"
-	"errors"
 )
-
 
 var logger seelog.LoggerInterface
 

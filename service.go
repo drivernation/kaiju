@@ -1,7 +1,8 @@
 package kaiju
+
 import (
-	"time"
 	"sync"
+	"time"
 )
 
 // Service is an interface for executing long running code asynchronously. Services should be used
@@ -24,13 +25,13 @@ type Service interface {
 
 // ScheduledService is a Service implementation that periodically executes a task at a predefined interval.
 type ScheduledService struct {
-	task	func() error
-	onStart func() error
-	onStop	func()
+	task         func() error
+	onStart      func() error
+	onStop       func()
 	initialDelay time.Duration
-	interval	 time.Duration
-	channel		 chan int
-	waiter		 sync.WaitGroup
+	interval     time.Duration
+	channel      chan int
+	waiter       sync.WaitGroup
 }
 
 // Creates a new ScheduledService instance. The service, once started, will wait for initialDelay before executing
@@ -101,10 +102,10 @@ func (s *ScheduledService) Stop() error {
 // IdleService is a service implementation that performs a task at startup and then
 // simply idles until told to stop, when it will perform a task before shutting down.
 type IdleService struct {
-	onStart 	func() error
-	onStop		func()
-	channel		chan int
-	waiter		sync.WaitGroup
+	onStart func() error
+	onStop  func()
+	channel chan int
+	waiter  sync.WaitGroup
 }
 
 // Creates a new IdleService instance.
@@ -135,7 +136,7 @@ func (s *IdleService) Start() error {
 
 		for {
 			select {
-			case <- s.channel:
+			case <-s.channel:
 				s.waiter.Done()
 				return
 			default:

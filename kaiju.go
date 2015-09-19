@@ -1,10 +1,11 @@
 package kaiju
+
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net"
 	"net/http"
-	"fmt"
-	"crypto/tls"
 	"os"
 	"os/signal"
 )

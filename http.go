@@ -1,8 +1,9 @@
 package kaiju
+
 import (
+	"github.com/goods/httpbuf"
 	"net/http"
 	"net/http/httputil"
-	"github.com/goods/httpbuf"
 )
 
 //Write an empty JSON Response to w. RespCode is provided as the response code.
