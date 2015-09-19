@@ -24,7 +24,11 @@ func Manage(ss ...Service) {
 	services = append(services, ss...)
 }
 
-func Handle(path string, handler func(http.ResponseWriter, *http.Request), methods ...string) {
+func Handle(path string, handler http.Handler, methods ...string) {
+	HandleFunc(path, handler.ServeHTTP, methods...)
+}
+
+func HandleFunc(path string, handler func(http.ResponseWriter, *http.Request), methods ...string) {
 	logger.Infof("Handling method(s) %s at %s", methods, path)
 	muxer.Handle(path, loggedHandler(handler)).Methods(methods...)
 }
