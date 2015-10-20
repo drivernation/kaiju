@@ -24,6 +24,6 @@ func (h loggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	buf := new(httpbuf.Buffer)
 	h(buf, req)
-	logger.Info("response: %s", buf.String())
+	logger.Infof("response: %s", buf.String())
 	buf.Apply(w)
 }
