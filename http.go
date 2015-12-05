@@ -13,6 +13,11 @@ func EmptyJsonResponse(w http.ResponseWriter, respCode int) {
 	w.Write([]byte("{ }"))
 }
 
+// A loggedHandler is an http.Handler implementation that logs the request before using the current logger before
+// servicing the request.
+//
+// After servicing the request, the response is logged using the same logger, before the response is ultimately sent
+// to the downstream client.
 type loggedHandler func(w http.ResponseWriter, req *http.Request)
 
 func (h loggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
