@@ -1,9 +1,19 @@
 package kaiju
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
+
+var ErrServiceManagerAlreadyStarted error = errors.New("This ServiceManager has already been started. ServiceManagers can only be started once.")
+var ErrServiceManagerNotStarted error = errors.New("This ServiceManager is not started.")
+
+type Health struct {
+	healthy bool
+	error   error
+}
 
 // Service is an interface for executing long running code asynchronously. Services should be used
 // when you want to run asynchronous code indefinitely. If you need short-lived asynchronous execution, then a raw
@@ -15,12 +25,15 @@ type Service interface {
 	// Stops the service. An optional error is returned if the service failed to stop.
 	Stop() error
 
-	// The main execution point for the service. This method is called by Service.Start() and acts as the
+	// The main execution point for the service. This method is called by Service#Start() and acts as the
 	// workhorse for the service.
 	//
 	// An optional error is returned if something goes wrong when running the service. A returned error will cause
 	// the service to panic and execution to cease.
 	Run() error
+
+	// Returns the health of the service.
+	Health() Health
 }
 
 // ScheduledService is a Service implementation that periodically executes a task at a predefined interval.
@@ -30,6 +43,7 @@ type ScheduledService struct {
 	onStop       func()
 	initialDelay time.Duration
 	interval     time.Duration
+	health       Health
 	channel      chan int
 	waiter       sync.WaitGroup
 }
@@ -76,7 +90,9 @@ func (s *ScheduledService) Start() error {
 				return
 			default:
 				if err := s.Run(); err != nil {
-					panic(err)
+					s.health.healthy = false
+					s.health.error = err
+					return
 				}
 				time.Sleep(s.interval)
 			}
@@ -89,6 +105,10 @@ func (s *ScheduledService) Start() error {
 // Start() should be used instead.
 func (s *ScheduledService) Run() error {
 	return s.task()
+}
+
+func (s ScheduledService) Health() Health {
+	return s.health
 }
 
 // Explicitly stops the service. Note that if an iteration of the task is already underway, it will finish
@@ -140,7 +160,6 @@ func (s *IdleService) Start() error {
 				s.waiter.Done()
 				return
 			default:
-				s.Run()
 			}
 		}
 	}()
@@ -159,4 +178,83 @@ func (s *IdleService) Stop() error {
 	s.channel <- 1
 	s.waiter.Wait()
 	return nil
+}
+
+// IdleService's Run() method is a noop, so it is technically always healthy.
+func (s IdleService) Health() Health {
+	return Health{healthy: true}
+}
+
+// ServiceManager is a registry of Services. It can be used to start and stop a number of services.
+type ServiceManager struct {
+	services []Service
+	started  bool
+}
+
+// Creates a pointer to a new ServiceManager instance and initializes its list of services.
+// The new ServiceManager instance will be empty after creation.
+func NewServiceManager() *ServiceManager {
+	return &ServiceManager{
+		services: []Service{},
+	}
+}
+
+// Registers a new service with the ServiceManager.
+func (m *ServiceManager) AddService(service Service) {
+	m.services = append(m.services, service)
+}
+
+// Starts all of the currently registered services. Returns an error if the ServiceManager is already started, or
+// one of the registered Services fails to start. After all services are successfully stared, a new go-routine is
+// started that monitors the health of all of the services. If one is found to be unhealthy, the application panics.
+func (m *ServiceManager) Start() error {
+	if m.started {
+		return ErrServiceManagerAlreadyStarted
+	}
+
+	m.started = true
+	for _, service := range m.services {
+		if err := service.Start(); err != nil {
+			return err
+		}
+	}
+
+	go func() {
+		for {
+			for _, service := range m.services {
+				health := service.Health()
+				if !health.healthy {
+					panic(fmt.Sprintf("Service became unhealthy: %s", health.error))
+				}
+			}
+		}
+	}()
+
+	return nil
+}
+
+// Stops all of the currently registered Services. Returns an error if the ServiceManager is not started.
+// If one or more of the registered Services fails to stop, returned errors from the Service#Stop() methods of the
+// failed Services are aggregated into a single error and returned.
+func (m *ServiceManager) Stop() error {
+	if !m.started {
+		return ErrServiceManagerNotStarted
+	}
+	aggErr := NewAggregateError()
+	for _, service := range m.services {
+		if err := service.Stop(); err != nil {
+			aggErr.AddError(err)
+		}
+	}
+
+	if !aggErr.Empty() {
+		return aggErr
+	}
+
+	return nil
+}
+
+// Returns the number of currently registered Services.
+func (m ServiceManager) Size() int {
+	return len(m.services)
 }

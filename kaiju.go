@@ -10,33 +10,41 @@ import (
 	"os/signal"
 )
 
-var services []Service
+var serviceManager *ServiceManager
 var muxer *mux.Router
 var tlsListener net.Listener
 
 func init() {
-	services = []Service{}
+	serviceManager = NewServiceManager()
 	muxer = mux.NewRouter()
 	registerControlCFunction()
 }
 
-func Manage(ss ...Service) {
-	services = append(services, ss...)
+// Manages one or more Services. The lifecycles of managed Services are controlled by Kaiju, so the application
+// should never start or stop a service manually.
+func Manage(services ...Service) {
+	for _, s := range services {
+		serviceManager.AddService(s)
+	}
 }
 
+// Registers a http.Handler with Kaiju's request muxer.
 func Handle(path string, handler http.Handler, methods ...string) {
 	HandleFunc(path, handler.ServeHTTP, methods...)
 }
 
+// Registers a handler function with Kaiju's HTTP muxer.
 func HandleFunc(path string, handler func(http.ResponseWriter, *http.Request), methods ...string) {
 	logger.Infof("Handling method(s) %s at %s", methods, path)
 	muxer.Handle(path, loggedHandler(handler)).Methods(methods...)
 }
 
+// Starts Kaiju using a standard HTTP server. In this mode, HTTP requests are unencrypted.
+// An error is returned it kaiju fails to start. This could be due to the ServiceManager encountering an error or if
+// the HTTP server failed to start up.
 func Start(config Config) error {
-	logger.Infof("Starting %d services...", len(services))
-	err := startServices()
-	if err != nil {
+	logger.Infof("Starting %d services...", serviceManager.Size())
+	if err := serviceManager.Start(); err != nil {
 		return err
 	}
 	defer stopServices()
@@ -46,9 +54,12 @@ func Start(config Config) error {
 	return http.ListenAndServe(addr, nil)
 }
 
+// Starts Kaiju using a HTTPS server. In this mode, HTTP requests are encrypted using the provided TLS configuration.
+// An error is returned it kaiju fails to start. This could be due to the ServiceManager encountering an error or if
+// the HTTPS server failed to start up.
 func StartTLS(config Config, tlsConfig *tls.Config) error {
-	logger.Infof("Starting %d services...", len(services))
-	if err := startServices(); err != nil {
+	logger.Infof("Starting %d services...", serviceManager.Size())
+	if err := serviceManager.Start(); err != nil {
 		return err
 	}
 	defer stopServices()
@@ -63,19 +74,10 @@ func StartTLS(config Config, tlsConfig *tls.Config) error {
 	return http.Serve(tlsListener, nil)
 }
 
-func startServices() error {
-	for _, service := range services {
-		if err := service.Start(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func stopServices() {
-	logger.Infof("Stopping %d services...", len(services))
-	for _, service := range services {
-		service.Stop()
+	logger.Infof("Stopping %d services...", serviceManager.Size())
+	if err := serviceManager.Stop(); err != nil {
+		logger.Errorf("Failed to stop one or more services: %s", err)
 	}
 }
 
