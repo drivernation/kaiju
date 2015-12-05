@@ -14,7 +14,7 @@ Aside from the aforementioned third party libraries, Kaiju provides some of its 
 
 For more information on using Kaiju, checkout out our [wiki](https://github.com/drivernation/kaiju/wiki)!
 
-Want to contribute to Dropwizard?
+Want to contribute to Kaiju?
 ---
 Before working on the code, if you plan to contribute changes, please read the following [CONTRIBUTING](CONTRIBUTING.md) document.
 
