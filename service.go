@@ -11,8 +11,8 @@ var ErrServiceManagerAlreadyStarted error = errors.New("This ServiceManager has 
 var ErrServiceManagerNotStarted error = errors.New("This ServiceManager is not started.")
 
 type Health struct {
-	healthy bool
-	error   error
+	Healthy bool
+	Error   error
 }
 
 // Service is an interface for executing long running code asynchronously. Services should be used
@@ -90,8 +90,8 @@ func (s *ScheduledService) Start() error {
 				return
 			default:
 				if err := s.Run(); err != nil {
-					s.health.healthy = false
-					s.health.error = err
+					s.health.Healthy = false
+					s.health.Error = err
 					return
 				}
 				time.Sleep(s.interval)
@@ -182,7 +182,7 @@ func (s *IdleService) Stop() error {
 
 // IdleService's Run() method is a noop, so it is technically always healthy.
 func (s IdleService) Health() Health {
-	return Health{healthy: true}
+	return Health{Healthy: true}
 }
 
 // ServiceManager is a registry of Services. It can be used to start and stop a number of services.
@@ -223,8 +223,8 @@ func (m *ServiceManager) Start() error {
 		for {
 			for _, service := range m.services {
 				health := service.Health()
-				if !health.healthy {
-					panic(fmt.Sprintf("Service became unhealthy: %s", health.error))
+				if !health.Healthy {
+					panic(fmt.Sprintf("Service became unhealthy: %s", health.Error))
 				}
 			}
 		}
