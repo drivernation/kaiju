@@ -11,7 +11,7 @@ Kaiju makes use of the following third party libraries:
 
 Aside from the aforementioned third party libraries, Kaiju provides some of its own tooling, such as a service framework for convenient management of long running processes.
 
-For more information on using Kaiju, checkout out our wiki!
+For more information on using Kaiju, checkout out our [wiki](https://github.com/drivernation/kaiju/wiki)!
 
 Want to contribute to Dropwizard?
 ---
