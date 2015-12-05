@@ -61,6 +61,7 @@ func NewScheduledService(initalDelay, interval time.Duration, task, onStart func
 	s.initialDelay = initalDelay
 	s.interval = interval
 	s.channel = make(chan int)
+	s.health = Health{Healthy: true}
 	s.waiter = sync.WaitGroup{}
 	return s
 }
