@@ -1,4 +1,4 @@
-package kaiju
+package service
 import (
 	"testing"
 	"errors"

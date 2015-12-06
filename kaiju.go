@@ -10,21 +10,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"github.com/drivernation/kaiju/service"
 )
 
-var serviceManager *ServiceManager
+var serviceManager *service.ServiceManager
 var muxer *mux.Router
 var tlsListener net.Listener
 
 func init() {
-	serviceManager = NewServiceManager()
+	serviceManager = service.NewServiceManager()
 	muxer = mux.NewRouter()
 	registerControlCFunction()
 }
 
 // Manages one or more Services. The lifecycles of managed Services are controlled by Kaiju, so the application
 // should never start or stop a service manually.
-func Manage(services ...Service) {
+func Manage(services ...service.Service) {
 	for _, s := range services {
 		serviceManager.AddService(s)
 	}
