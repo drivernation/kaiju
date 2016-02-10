@@ -7,10 +7,7 @@ Kaiju is a web application framework for the Go programming language. It brings 
 Kaiju makes use of the following third party libraries:
 * [Gorrilla Mux](https://github.com/gorilla/mux) for muxing HTTP(S) requests.
 * [Seelog](https://github.com/cihub/seelog) for logging all the things.
-* [Go-Yaml](https://github.com/go-yaml/yaml) for working with YAML files.
 * And more to come!
-
-Aside from the aforementioned third party libraries, Kaiju provides some of its own tooling, such as a service framework for convenient management of long running processes.
 
 For more information on using Kaiju, checkout out our [wiki](https://github.com/drivernation/kaiju/wiki)!
 
