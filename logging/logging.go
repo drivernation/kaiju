@@ -1,4 +1,4 @@
-package kaiju
+package logging
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-var logger seelog.LoggerInterface
+var Logger seelog.LoggerInterface
 
 func init() {
 	DisableLogging()
@@ -17,7 +17,7 @@ func DisableLogging() {
 }
 
 func UseLogger(newLogger seelog.LoggerInterface) {
-	logger = newLogger
+	Logger = newLogger
 }
 
 func SetLogWriter(writer io.Writer, minLevel seelog.LogLevel) error {

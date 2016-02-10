@@ -1,25 +1,17 @@
-package kaiju
-import (
-	"testing"
-	"net/http/httptest"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"io/ioutil"
-)
+package http
 
-func TestEmptyJsonResponse(t *testing.T) {
-	w := httptest.NewRecorder()
-	respCode := 200
-	EmptyJsonResponse(w, respCode)
-	assert.Equal(t, respCode, w.Code)
-	assert.Equal(t, "application/json", w.Header().Get("Content-type"))
-	assert.Equal(t, "{ }", w.Body.String())
-}
+import (
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
 func TestLoggedHandler(t *testing.T) {
 	hit := false
-	h := loggedHandler(func(w http.ResponseWriter, req *http.Request) {
-		hit=true
+	h := LoggedHandler(func(w http.ResponseWriter, req *http.Request) {
+		hit = true
 		w.Write([]byte("blah"))
 	})
 	server := httptest.NewServer(h)
