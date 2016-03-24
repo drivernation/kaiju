@@ -1,9 +1,7 @@
 package logging
 
 import (
-	"errors"
 	"github.com/cihub/seelog"
-	"io"
 )
 
 var Logger seelog.LoggerInterface
