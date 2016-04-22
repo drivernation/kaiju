@@ -17,4 +17,3 @@ func DisableLogging() {
 func UseLogger(newLogger seelog.LoggerInterface) {
 	Logger = newLogger
 }
-
