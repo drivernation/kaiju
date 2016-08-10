@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func TestConfigure(t *testing.T) {
+func TestConfigure_File(t *testing.T) {
 	config := Config{
-		Level: "error",
+		File: "/tmp/test.log",
 	}
 	closer := Configure(config)
 	defer closer()
-	assert.Equal(t, logrus.ErrorLevel, logrus.StandardLogger().Level)
+	assert.Equal(t, logrus.DebugLevel, logrus.StandardLogger().Level)
 }
