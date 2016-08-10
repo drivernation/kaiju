@@ -1,19 +1,49 @@
 package logging
 
 import (
-	"github.com/cihub/seelog"
+	"github.com/Sirupsen/logrus"
+	"os"
 )
 
-var Logger seelog.LoggerInterface
-
-func init() {
-	DisableLogging()
+type Config struct {
+	Level  string               `json:"level" yaml:"level"`
+	File   string               `json:"file" yaml:"file"`
+	Format logrus.TextFormatter `json:"format" yaml:"format"`
 }
 
-func DisableLogging() {
-	UseLogger(seelog.Disabled)
+// Configure configures logrus's standard logger with the provided config object. A closer function is returned
+// that should be used to close the logger and any open file descriptors before the application terminates.
+func Configure(config Config) func() error {
+	logger, closer := New(config)
+	stdLogger := logrus.StandardLogger()
+	*stdLogger = *logger
+	return closer
 }
 
-func UseLogger(newLogger seelog.LoggerInterface) {
-	Logger = newLogger
+// New creates a new *logrus.Logger instnace using the provided config object. A closer function is returned
+// that should be used to close the logger and any open file descriptors before the application terminates.
+func New(config Config) (*logrus.Logger, func() error) {
+	level, err := logrus.ParseLevel(config.Level)
+	if err != nil {
+		level = logrus.DebugLevel
+	}
+	out := os.Stderr
+	closer := func() error {
+		return nil
+	}
+	if config.File != "" {
+		f, err := os.OpenFile(config.File, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err == nil {
+			out = f
+			closer = func() error {
+				return f.Close()
+			}
+		}
+	}
+	return &logrus.Logger{
+		Out:       out,
+		Formatter: &config.Format,
+		Hooks:     make(logrus.LevelHooks),
+		Level:     level,
+	}, closer
 }

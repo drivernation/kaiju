@@ -3,6 +3,7 @@
 package kaiju
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/drivernation/kaiju/http"
 	"github.com/drivernation/kaiju/logging"
 	"github.com/gorilla/mux"
@@ -11,8 +12,8 @@ import (
 )
 
 var (
-	Muxer        *mux.Router = mux.NewRouter()
-	ShutdownHook func()
+	Muxer         *mux.Router = mux.NewRouter()
+	shutdownHooks []func()    = make([]func(), 0)
 )
 
 func init() {
@@ -20,7 +21,14 @@ func init() {
 }
 
 type Config struct {
-	Http http.Config
+	Http    http.Config
+	Logging logging.Config
+}
+
+// AddShutdownHook appends a function to the list of functions that will be executed before the application shuts down.
+// Note that these hooks will not be executed in the event of a panic.
+func AddShutdownHook(f func()) {
+	shutdownHooks = append(shutdownHooks, f)
 }
 
 // Starts Kaiju using a kaiju/http.SimpleHttpServer with the provided config.
@@ -30,8 +38,20 @@ func Start(config Config) error {
 		Config:  config.Http,
 		Handler: Muxer,
 	}
+	closer := logging.Configure(config.Logging)
+	AddShutdownHook(func() {
+		if err := closer(); err != nil {
+			logrus.Error(err)
+		}
+	})
+	// Execute any registered shutdown hooks.
+	defer func() {
+		for _, f := range shutdownHooks {
+			f()
+		}
+	}()
 	addr := server.Addr()
-	logging.Logger.Infof("Listening on %s.", addr)
+	logrus.Infof("Listening on %s.", addr)
 	return server.Serve()
 }
 
@@ -41,9 +61,8 @@ func RegisterControlCFunction() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			logging.Logger.Close()
-			if ShutdownHook != nil {
-				ShutdownHook()
+			for _, f := range shutdownHooks {
+				f()
 			}
 			os.Exit(0)
 		}

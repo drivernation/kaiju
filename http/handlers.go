@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/drivernation/kaiju/logging"
+	"github.com/Sirupsen/logrus"
 	"github.com/goods/httpbuf"
 	"net/http"
 	"net/http/httputil"
@@ -16,13 +16,13 @@ type LoggedHandler func(w http.ResponseWriter, req *http.Request)
 
 func (h LoggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if dump, err := httputil.DumpRequest(req, true); err != nil {
-		logging.Logger.Errorf("Failed to log request:\n%s", err)
+		logrus.Errorf("Failed to log request:\n%s", err)
 	} else {
-		logging.Logger.Info(string(dump))
+		logrus.Info(string(dump))
 	}
 
 	buf := new(httpbuf.Buffer)
 	h(buf, req)
-	logging.Logger.Infof("response: %s", buf.String())
+	logrus.Infof("response: %s", buf.String())
 	buf.Apply(w)
 }
