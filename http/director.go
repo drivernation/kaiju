@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"path"
 )
@@ -27,7 +28,11 @@ func (r *roundRobin) Direct(method, resource string, body []byte) (*http.Request
 	next, r.hosts = r.hosts[0], r.hosts[1:]
 	r.hosts = append(r.hosts, next)
 	url := path.Join(string(r.scheme), next, resource)
-	return http.NewRequest(method, url, bytes.NewBuffer(body))
+	var br io.Reader = nil
+	if body != nil {
+		br = bytes.NewBuffer(body)
+	}
+	return http.NewRequest(method, url, br)
 }
 
 func RoundRobin(hosts []string, scheme Scheme) Director {
