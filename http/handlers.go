@@ -22,7 +22,6 @@ func (h LoggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		logrus.Info(string(dump))
 	}
-
 	buf := new(httpbuf.Buffer)
 	h.Handler.ServeHTTP(buf, req)
 	logrus.Infof("response: %s", buf.String())
