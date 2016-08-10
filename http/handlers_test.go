@@ -10,10 +10,12 @@ import (
 
 func TestLoggedHandler(t *testing.T) {
 	hit := false
-	h := LoggedHandler(func(w http.ResponseWriter, req *http.Request) {
-		hit = true
-		w.Write([]byte("blah"))
-	})
+	h := LoggedHandler{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			hit = true
+			w.Write([]byte("blah"))
+		}),
+	}
 	server := httptest.NewServer(h)
 	defer server.Close()
 	res, err := http.Get(server.URL)

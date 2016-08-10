@@ -23,10 +23,7 @@ func TestSimpleServer(t *testing.T) {
 	r := mux.NewRouter()
 	h := new(mockHandler)
 	r.Handle("/", h).Methods("GET")
-	s := &SimpleServer{
-		Config:  config,
-		Handler: r,
-	}
+	s := StandardServer(config, r)
 	go s.Serve()
 	time.Sleep(5 * time.Second)
 	http.Get("http://localhost:8080/")

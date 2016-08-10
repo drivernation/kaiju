@@ -20,12 +20,14 @@ type Config struct {
 	}
 }
 
-type SimpleServer struct {
+// standardServer is a Server implementation that uses the server from the stdlib's http package to server HTTP requests.
+// standardServer can serve either TLS or non-TLS requests depending on configuration.
+type standardServer struct {
 	Config  Config
 	Handler http.Handler
 }
 
-func (s *SimpleServer) Serve() (err error) {
+func (s *standardServer) Serve() (err error) {
 	addr := s.Addr()
 	if s.Config.Tls.Enabled {
 		err = http.ListenAndServeTLS(addr, s.Config.Tls.Cert, s.Config.Tls.Key, s.Handler)
@@ -35,6 +37,14 @@ func (s *SimpleServer) Serve() (err error) {
 	return
 }
 
-func (s SimpleServer) Addr() string {
+func (s standardServer) Addr() string {
 	return fmt.Sprintf("%s:%d", s.Config.Host, s.Config.Port)
+}
+
+// StandardServer creates a new standardServer instance for serving HTTP requests using the stdlib's http package.
+func StandardServer(config Config, handler http.Handler) Server {
+	return &standardServer{
+		Config:  config,
+		Handler: handler,
+	}
 }

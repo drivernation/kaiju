@@ -7,12 +7,14 @@ import (
 	"net/http/httputil"
 )
 
-// A loggedHandler is an http.Handler implementation that logs the request before using the current logger before
+// A loggedHandler is an http.Handler implementation that logs the request using the current logger before
 // servicing the request.
 //
 // After servicing the request, the response is logged using the same logger, before the response is ultimately sent
 // to the downstream client.
-type LoggedHandler func(w http.ResponseWriter, req *http.Request)
+type LoggedHandler struct {
+	Handler http.Handler
+}
 
 func (h LoggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if dump, err := httputil.DumpRequest(req, true); err != nil {
@@ -22,7 +24,7 @@ func (h LoggedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	buf := new(httpbuf.Buffer)
-	h(buf, req)
+	h.Handler.ServeHTTP(buf, req)
 	logrus.Infof("response: %s", buf.String())
 	buf.Apply(w)
 }

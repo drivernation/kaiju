@@ -34,10 +34,6 @@ func AddShutdownHook(f func()) {
 // Starts Kaiju using a kaiju/http.SimpleHttpServer with the provided config.
 // An error is returned it kaiju fails to start.
 func Start(config Config) error {
-	server := &http.SimpleServer{
-		Config:  config.Http,
-		Handler: Muxer,
-	}
 	closer := logging.Configure(config.Logging)
 	AddShutdownHook(func() {
 		if err := closer(); err != nil {
@@ -50,6 +46,7 @@ func Start(config Config) error {
 			f()
 		}
 	}()
+	server := http.StandardServer(config.Http, &http.LoggedHandler{Muxer})
 	addr := server.Addr()
 	logrus.Infof("Listening on %s.", addr)
 	return server.Serve()
