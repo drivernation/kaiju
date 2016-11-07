@@ -27,7 +27,7 @@ func New(config Config) (*logrus.Logger, func() error) {
 	if err != nil {
 		level = logrus.DebugLevel
 	}
-	out := os.Stderr
+	out := os.Stdout
 	closer := func() error {
 		return nil
 	}
